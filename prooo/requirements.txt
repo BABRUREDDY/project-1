@@ -1,0 +1,7 @@
+streamlit
+pinecone-client
+cohere
+PyPDF2
+numpy
+pandas
+scikit-learn

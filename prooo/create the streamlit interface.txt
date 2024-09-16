@@ -1,0 +1,66 @@
+import streamlit as st
+import pinecone
+import cohere
+import PyPDF2
+import numpy as np
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+# Initialize Pinecone and Cohere
+pinecone.init(api_key='YOUR_PINECONE_API_KEY', environment='us-west1-gcp')
+index = pinecone.Index('document-index')
+cohere_client = cohere.Client('YOUR_COHERE_API_KEY')
+
+# Helper functions
+def generate_embeddings(texts):
+    vectorizer = TfidfVectorizer()
+    return vectorizer.fit_transform(texts).toarray()
+
+def query_pinecone(query_text):
+    query_embedding = generate_embeddings([query_text])[0].tolist()
+    results = index.query(queries=[query_embedding], top_k=1)
+    return results
+
+def generate_answer(context, question):
+    prompt = f"Context: {context}\nQuestion: {question}\nAnswer:"
+    response = cohere_client.generate(
+        model='command-xlarge-nightly',
+        prompt=prompt,
+        max_tokens=50
+    )
+    return response.generations[0].text.strip()
+
+def process_pdf(file):
+    pdf_reader = PyPDF2.PdfFileReader(file)
+    text = ""
+    for page_num in range(pdf_reader.numPages):
+        page = pdf_reader.getPage(page_num)
+        text += page.extract_text()
+    return text
+
+# Streamlit UI
+st.title("Interactive QA Bot")
+st.write("Upload your PDF document and ask questions based on its content.")
+
+uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
+if uploaded_file is not None:
+    document_text = process_pdf(uploaded_file)
+    embeddings = generate_embeddings([document_text])
+    
+    # Clear old embeddings
+    index.delete_all()
+    # Index new embeddings
+    index.upsert(vectors={"pdf_doc": embeddings[0].tolist()})
+    
+    st.write("Document processed successfully!")
+    
+    question = st.text_input("Ask a question about the document")
+    if question:
+        query_result = query_pinecone(question)
+        context = document_text  # For simplicity, use the entire document as context
+        answer = generate_answer(context, question)
+        
+        st.write(f"**Context**: {context[:500]}...")  # Show a snippet of the context
+        st.write(f"**Answer**: {answer}")
+
+# Run the Streamlit app with `streamlit run app.py`

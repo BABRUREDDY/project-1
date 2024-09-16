@@ -1,0 +1,10 @@
+def query_pinecone(query_text):
+    # Generate embedding for the query
+    query_embedding = generate_embeddings([query_text])[0].tolist()
+    
+    # Query Pinecone
+    results = index.query(queries=[query_embedding], top_k=1)
+    return results
+
+query_result = query_pinecone("What is Pinecone?")
+print(query_result)

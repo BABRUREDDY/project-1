@@ -1,0 +1,12 @@
+queries = [
+    "What is Pinecone?",
+    "Tell me about Cohere.",
+    "What does Python do?"
+]
+
+for query in queries:
+    result = query_pinecone(query)
+    context_id = result['matches'][0]['id']
+    context = df.loc[df['id'] == context_id, 'text'].values[0]
+    answer = generate_answer(context, query)
+    print(f"Query: {query}\nAnswer: {answer}\n")

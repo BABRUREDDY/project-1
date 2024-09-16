@@ -1,0 +1,19 @@
+import cohere
+
+# Initialize Cohere
+cohere_client = cohere.Client('YOUR_COHERE_API_KEY')
+
+def generate_answer(context, question):
+    prompt = f"Context: {context}\nQuestion: {question}\nAnswer:"
+    response = cohere_client.generate(
+        model='command-xlarge-nightly',
+        prompt=prompt,
+        max_tokens=50
+    )
+    return response.generations[0].text.strip()
+
+# Example usage
+context = df.loc[df['id'] == query_result['matches'][0]['id'], 'text'].values[0]
+question = "What is Pinecone?"
+answer = generate_answer(context, question)
+print(answer)

@@ -1,0 +1,24 @@
+import pandas as pd
+import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+# Example data
+data = [
+    {"id": "1", "text": "Python is a high-level programming language."},
+    {"id": "2", "text": "Pinecone is a vector database for similarity search."},
+    {"id": "3", "text": "Cohere provides large language models for text generation."}
+]
+
+df = pd.DataFrame(data)
+
+# Convert documents to embeddings (using a placeholder model for demonstration)
+def generate_embeddings(texts):
+    # In practice, use a pre-trained model like Sentence-BERT for better embeddings
+    vectorizer = TfidfVectorizer()
+    return vectorizer.fit_transform(texts).toarray()
+
+embeddings = generate_embeddings(df['text'])
+
+# Upload embeddings to Pinecone
+for i, (id, embedding) in enumerate(zip(df['id'], embeddings)):
+    index.upsert(vectors={id: embedding.tolist()})
